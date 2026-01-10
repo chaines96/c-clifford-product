@@ -1,21 +1,28 @@
 #include <stdlib.h>
-#include <math.h>
+#include <string.h>
 
-typedef struct k_blade_s {
-    unsigned *basis_vector; //the i-th bit represents the i-th basis vector in the product.
-    float coefficient;
-} k_blade;
-
-unsigned truncate_left(unsigned a, unsigned b) {
-    while (!(a&1U))
+unsigned truncate(unsigned a, unsigned b, int left) {
+    if (left)
     {
-        a = a >> 1;
-        b = b >> 1;
+        while (!(a&1U))
+        {
+            a = a >> 1;
+            b = b >> 1;
+        }
+    }
+    else
+    {
+        unsigned int max = 1U << (sizeof(unsigned int) * 8 - 1);
+        while (!(a&max))
+        {
+            a = a << 1;
+            b = b << 1;
+        }
     }
     return b; //The rightmost bits of b have been truncated to the leftmost in bit a.
 }
 
-int get_left_1s(unsigned a){
+int get_number_1s(unsigned a){
     int i = 0;
     while (a) //a != 0
     {
@@ -28,29 +35,85 @@ int get_left_1s(unsigned a){
     return i;
 }
 
-int collect_sign (unsigned *a, unsigned *b, int dim) {
-    unsigned squares;
-    unsigned no_squares;
-    int sign = 1;
-    int flag = 1; //whether we've found our lowest bit or not.'
-    for (int i = 0;i < dim;i++)
-    {
-        no_squares = a[i] ^ b[i]; //XOR the terms.
-        squares = a[i] & b[i]; //squared terms only
-        if (no_squares && flag)
-        {
-            unsigned no_squares = truncate_left(squares, no_squares);
-            flag = 0;
-        }
-        if (!flag)
-        {
-            if (get_left_1s(no_squares) % 2) sign = -sign;
-        }
-
-    }
-    return sign;
+int collect_sign (unsigned a, unsigned b) {
+    unsigned squares = a&b;
+    unsigned no_squares = a^b;
+    truncate(squares,no_squares,0);
+    truncate(squares,no_squares,1);
+    if (get_number_1s(no_squares)%2) {return -1;} else {return 1;}
 }
 
-int main() {
+float* clifford_product(float *A, float *B, int dim)
+{
+    unsigned limit = 1U << dim;
+    float* product = calloc(dim, sizeof(float));
+    //For each i in i...terms,, calculate the sign of a*b and multiply the coefficient at a^b by the product of the two coefficients times the sign.
+    for (unsigned i = 0; i < dim;i++)
+    {
+        for (unsigned j = 0;j < dim;j++)
+        {
+            unsigned blade = i^j; //This is the index to which the clifford_product function will write the product to. The XOR cancels out the squared basis vectors.
+            product[blade] += A[i]*B[j]*collect_sign(i,j);
+        }
+    }
+    return product;
+}
+
+int parse_blade(int argc, char* argv[], int index, float* multivector)
+{
+    unsigned mask;
+    int i;
+    float coefficient;
+    float tens_spot;
+    for (i = index; i < argc;i++)
+    {
+        tens_spot = 1;
+        mask = 0;
+        int sign = 1;
+        for (int j = 0; j < strlen(argv[i]);j++)
+        {
+            if (argv[i][j] == ')')
+            {
+                i++;
+                return i; //end of current vector reached.
+            }
+            else
+            {
+                if (argv[i][j] == '-')
+                {
+                    sign = -sign;
+                }
+                else
+                {
+                    coefficient = argv[i][j]*tens_spot;
+                    tens_spot = tens_spot*10;
+                }
+            }
+            if (argv[i][j] == 'e')
+            {
+                int vector_index = argv[i][j];
+                while((argv[i][j+1] != '\n') && (argv[i][j] < 9)) //while this character is numberic
+                {
+                    j++;
+                    mask = mask & (1U << vector_index); //Adding 1 to the index
+                }
+            }
+        }
+        multivector[mask] = coefficient * sign; //Finally, we can discovered the coefficient of this statement and can move on.
+    }
+    return i;
+}
+
+int main(int argc, char* argv[]) {
+    float* A = malloc(sizeof(float)*argc);
+    float* B = malloc(sizeof(float)*argc);
+    int B_index = parse_blade(argc, argv, 0, A);
+    parse_blade(argc, argv, B_index, B);
+    int dim = argc - B_index;
+    float* C = malloc(sizeof(float)*B_index);
+    C = clifford_product(A, B, dim);
+    free(A);
+    free(B);
+    free(C);
     return 0;
 }
