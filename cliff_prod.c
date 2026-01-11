@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 unsigned truncate(unsigned a, unsigned b, int left) {
@@ -104,14 +105,59 @@ int parse_blade(int argc, char* argv[], int index, float* multivector)
     return i;
 }
 
+float* parse_blade_inp(char* line)
+{
+    unsigned j = 0;
+    char buffer[100];
+    fgets(buffer, 100, stdin);
+    int dimension = 1;
+    float* multivec = calloc(20,sizeof(float));
+    char* token = strtok(buffer," ");
+    while(token)
+    {
+        float candidate = 0;
+        int tenspot = 1;
+        int mode = 0;
+        for (int i = 0;buffer[i];i++)
+        {
+            if (buffer[i] == 'e')
+            {
+                mode = 1;
+                tenspot = 1;
+            }
+            else
+            {
+                if (mode)
+                {
+                    j = j & (1U << buffer[i]);
+                }
+                else
+                {
+                    if (buffer[i] == '-')
+                    {
+                        tenspot -= -1;
+                    }
+                    else
+                    {
+                        candidate += buffer[i]*tenspot;
+                        tenspot *= 10;
+                    }
+                }
+            }
+        }
+        dimension = 2*dimension;
+        multivec[j] = candidate;
+        token = strtok(NULL," ");
+    }
+    return multivec;
+}
+
 int main(int argc, char* argv[]) {
-    float* A = malloc(sizeof(float)*argc);
-    float* B = malloc(sizeof(float)*argc);
-    int B_index = parse_blade(argc, argv, 0, A);
-    parse_blade(argc, argv, B_index, B);
-    int dim = argc - B_index;
-    float* C = malloc(sizeof(float)*B_index);
-    C = clifford_product(A, B, dim);
+    printf("Please enter your first vector.\n");
+    float* A = parse_blade_inp(" ");
+    printf("Please enter the second vector.\n");
+    float* B = parse_blade_inp(" ");
+    float* C = clifford_product(A, B, argc);
     free(A);
     free(B);
     free(C);
