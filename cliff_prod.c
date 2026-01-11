@@ -2,46 +2,24 @@
 #include <stdio.h>
 #include <string.h>
 
-unsigned truncate(unsigned a, unsigned b, int left) {
-    if (left)
-    {
-        while (!(a&1U))
-        {
-            a = a >> 1;
-            b = b >> 1;
-        }
+int popcount(unsigned a) {
+    int c = 0;
+    while (a) {
+        c += a & 1U;
+        a >>= 1;
     }
-    else
-    {
-        unsigned int max = 1U << (sizeof(unsigned int) * 8 - 1);
-        while (!(a&max))
-        {
-            a = a << 1;
-            b = b << 1;
-        }
-    }
-    return b; //The rightmost bits of b have been truncated to the leftmost in bit a.
+    return c;
 }
 
-int get_number_1s(unsigned a){
-    int i = 0;
-    while (a) //a != 0
-    {
-        if (!(a & 1U))
-        {
-            i++;
-        }
-        a = a >> 1;
+int collect_sign(unsigned a, unsigned b) {
+    int sign = 1;
+    while (a) {
+        unsigned lowest = a & -a;          // lowest set bit in a
+        a ^= lowest;
+        if (popcount(b & (lowest - 1)) & 1)
+            sign = -sign;
     }
-    return i;
-}
-
-int collect_sign (unsigned a, unsigned b) {
-    unsigned squares = a&b;
-    unsigned no_squares = a^b;
-    truncate(squares,no_squares,0);
-    truncate(squares,no_squares,1);
-    if (get_number_1s(no_squares)%2) {return -1;} else {return 1;}
+    return sign;
 }
 
 float* clifford_product(float *A, float *B, int dim)
@@ -153,6 +131,7 @@ float* parse_blade_inp(char* line)
 }
 
 int main(int argc, char* argv[]) {
+    /*
     printf("Please enter your first vector.\n");
     float* A = parse_blade_inp(" ");
     printf("Please enter the second vector.\n");
@@ -160,6 +139,16 @@ int main(int argc, char* argv[]) {
     float* C = clifford_product(A, B, argc);
     free(A);
     free(B);
-    free(C);
+    free(C);*/
+    unsigned a = 3;
+    unsigned b = 1;
+    if (collect_sign(a,b) > 0)
+    {
+        printf("Sign is positive! \n");
+    }
+    else
+    {
+        printf("Sign is negative! \n");
+    }
     return 0;
 }
