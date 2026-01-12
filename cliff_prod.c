@@ -27,7 +27,8 @@ float* clifford_product(float *A, float *B, int dim)
 {
     unsigned limit = 1U << dim;
     int csize = dim;
-    float* product = calloc(csize, sizeof(float));
+    float* product = calloc(limit, sizeof(float));
+    printf("Got here\n");
     //For each i in i...terms,, calculate the sign of a*b and multiply the coefficient at a^b by the product of the two coefficients times the sign.
     for (unsigned i = 0; i < limit;i++)
     {
@@ -46,23 +47,69 @@ int main() {
     printf("Enter the dimensions of your vector space (min 1, max 32)\n");
     fscanf(stdin,"%d",&dimension);
     unsigned limit = 1U << dimension;
-    float* A = calloc(dimension, sizeof(float));
-    float* B = calloc(dimension, sizeof(float));
-    for (unsigned i=0;i<limit;i++)
+    float* A = calloc(limit, sizeof(float));
+    float* B = calloc(limit, sizeof(float));
+    printf("Enter the scalar component of the left multivector.\n");
+    fscanf(stdin,"%f",(A));
+    for (unsigned i=1;i<limit;i++)
     {
-        printf("Enter coefficient for component  %u of the left multivector.\n",i);
+        printf("Enter coefficient for component");
+        unsigned j = 1; int k = 1;
+        while (j < limit)
+        {
+            if (j & i)
+            {
+                printf(" e%d",k);
+            }
+            j = j << 1;
+            k += 1;
+        }
+        printf("\n");
         fscanf(stdin,"%f",(A+i));
     }
-    for (unsigned i=0;i<limit;i++)
+    printf("Enter the scalar component of the right multivector.\n");
+    fscanf(stdin,"%f",(B));
+    for (unsigned i=1;i<limit;i++)
     {
-        printf("Enter coefficient for component  %u of the right multivector.\n",i);
+        printf("Enter coefficient for component");
+        unsigned j = 1; int k = 1;
+        while (j < limit)
+        {
+            if (j & i)
+            {
+                printf(" e%d",k);
+            }
+            j = j << 1;
+            k += 1;
+        }
+        printf("\n");
         fscanf(stdin,"%f",(B+i));
     }
     float* C = clifford_product(A,B,dimension);
     printf("The clifford product is:\n%.2f ",C[0]);
     for (unsigned i=1;i<limit;i++)
     {
-        printf("+ %.2f e%u",C[i],i);
+        if (C[i])
+        {
+            if (C[i] > 1)
+            {
+                printf("+ %.2f ",C[i]);
+            }
+            else
+            {
+                printf("- %.2f ",(-C[i]));
+            }
+            unsigned j = 1; int k = 1;
+            while (j < limit)
+            {
+                if (j & i)
+                {
+                    printf("e%d",k);
+                }
+                j = j << 1;
+                k += 1;
+            }
+        }
     }
     free(A); free(B); free(C);
     return 0;
