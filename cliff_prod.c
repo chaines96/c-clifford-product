@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
 int popcount(unsigned a) {
     int c = 0;
     while (a) {
@@ -9,14 +10,14 @@ int popcount(unsigned a) {
         a >>= 1;
     }
     return c;
-}
+}*/
 
 int collect_sign(unsigned a, unsigned b) {
     int sign = 1;
     while (a) {
         unsigned lowest = a & -a;          // lowest set bit in a
         a ^= lowest;
-        if (popcount(b & (lowest - 1)) & 1)
+        if (__builtin_popcount(b & (lowest - 1)) & 1)
             sign = -sign;
     }
     return sign;
@@ -39,62 +40,30 @@ float* clifford_product(float *A, float *B, int dim)
     return product;
 }
 
-float* parse_blade_inp(char* line)
-{
-    int csize = 4;
-    unsigned j = 0;
-    char buffer[100];
-    fgets(buffer, 100, stdin);
-    int dimension = 1;
-    float* multivec = calloc(csize,sizeof(float));
-    char* token = strtok(buffer," ");
-    while(token)
-    {
-        float candidate = 0;
-        int tenspot = 1;
-        int mode = 0;
-        for (int i = 0;buffer[i];i++)
-        {
-            if (buffer[i] == 'e')
-            {
-                mode = 1;
-                tenspot = 1;
-            }
-            else
-            {
-                if (mode)
-                {
-                    j = j & (1U << buffer[i]);
-                }
-                else
-                {
-                    if (buffer[i] == '-')
-                    {
-                        tenspot -= -1;
-                    }
-                    else
-                    {
-                        candidate += buffer[i]*tenspot;
-                        tenspot *= 10;
-                    }
-                }
-            }
-        }
-        dimension = 2*dimension;
-        multivec[j] = candidate;
-        token = strtok(NULL," ");
-    }
-    return multivec;
-}
 
 int main() {
-    int dimension = 2;
-    float* A = calloc(csize, sizeof(float));
-    float* B = calloc(csize, sizeof(float));
-    A[0] = 1; A[1] = 1;
-    B[3] = 1;
+    int dimension = 1;
+    printf("Enter the dimensions of your vector space (min 1, max 32)\n");
+    fscanf(stdin,"%d",&dimension);
+    unsigned limit = 1U << dimension;
+    float* A = calloc(dimension, sizeof(float));
+    float* B = calloc(dimension, sizeof(float));
+    for (unsigned i=0;i<limit;i++)
+    {
+        printf("Enter coefficient for component  %u of the left multivector.\n",i);
+        fscanf(stdin,"%f",(A+i));
+    }
+    for (unsigned i=0;i<limit;i++)
+    {
+        printf("Enter coefficient for component  %u of the right multivector.\n",i);
+        fscanf(stdin,"%f",(B+i));
+    }
     float* C = clifford_product(A,B,dimension);
-    printf("Clifford product is %f + %f e1 + %f e2 + %f e1 e2\n",C[0],C[1],C[2],C[3]);
+    printf("The clifford product is:\n%.2f ",C[0]);
+    for (unsigned i=1;i<limit;i++)
+    {
+        printf("+ %.2f e%u",C[i],i);
+    }
     free(A); free(B); free(C);
     return 0;
 }
