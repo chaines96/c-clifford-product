@@ -26,9 +26,7 @@ int collect_sign(unsigned a, unsigned b) {
 float* clifford_product(float *A, float *B, int dim)
 {
     unsigned limit = 1U << dim;
-    int csize = dim;
     float* product = calloc(limit, sizeof(float));
-    printf("Got here\n");
     //For each i in i...terms,, calculate the sign of a*b and multiply the coefficient at a^b by the product of the two coefficients times the sign.
     for (unsigned i = 0; i < limit;i++)
     {
@@ -111,6 +109,7 @@ int main() {
             }
         }
     }
+    printf("\n");
     free(A); free(B); free(C);
     return 0;
 }
