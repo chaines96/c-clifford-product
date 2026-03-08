@@ -1,8 +1,11 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -O2
+clifford_calc: main.o clifford_prod.o 
+	gcc main.o clifford_prod.o -o clifford_calc
 
-cliff_prod: cliff_prod.c
-	$(CC) $(CFLAGS) -o cliff_prod cliff_prod.c
+main.o: main.c clifford_prod.h
+	gcc -Wall -Wextra -g -c main.c
+
+cliff_prod.o: clifford_prod.c clifford_prod.h
+	gcc -Wall -Wextra -g -c clifford_prod.c
 
 clean:
-	rm -f cliff_prod
+	rm -f clifford_calc *.core *.o

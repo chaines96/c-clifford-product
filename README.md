@@ -11,7 +11,7 @@ Among other reasons, Clifford Algebras are of interest because they can be used 
 This calculator operates in an interactive session which asks for inputs to specify the dimension and coefficients of the two input multivectors. To use it, navigate to the program directory and run:
 ```
 make
-.\c-clifford-product
+.\clifford_calc
 ```
 
 # My Implementation
