@@ -25,6 +25,7 @@ float* clifford_product(float *A, float *B, float *product, float* squares, int 
     {
         for (unsigned j = 0;j < limit;j++)
         {
+            //The index of the array is the integer whose binary n-th position is 1 if the n-th dimension is present in the product.
             unsigned blade = i^j; //This is the index to which the clifford_product function will write the product to. The XOR cancels out the squared basis vectors.
             product[blade] += A[i]*B[j]*collect_sign(i,j,squares);
         }
